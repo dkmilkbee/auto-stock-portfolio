@@ -422,8 +422,8 @@ st.subheader('This web app will generate portfolios based on 4 strategies')
 #your_return = 0
 #strategy = 'max_sharpe' # (vaild options: max_sharpe / min_risk / custom_risk? / custom_return?)
 # User input components
-source = st.radio("Data source: ", ('File', 'Web (Not tested, very slow!)'))
-stock_index = st.radio("Select your stock index: ", ('DJI', 'S&P100'))
+source = st.radio("Data source: ", ('File', 'Web (Very slow!)'))
+stock_index = st.radio("Select your stock index: ", ('DJI', 'S&P100'), index=1)
 start = st.date_input("Start Date: ", dt.date(2019, 5, 1))
 end = st.date_input("End Date: ", dt.date.today())
 risk_free_rate = st.number_input('Risk free rate:', min_value=0.00, max_value=1.00, value=0.02, step=0.01)
@@ -452,7 +452,7 @@ elif strategy == 'Random stock pick and do optimization':
     elif opt_method == 'Custom Return':
         your_return = st.number_input('Custom return:', min_value=0.00, max_value=1.00, value=0.8, step=0.01)
 
-report = st.radio("View report using Quantstats? (Require internet connection)", ('Yes', 'No'))
+report = st.radio("View report using Quantstats? (Require internet connection, not work using cloud service)", ('Yes', 'No'), index=1)
 # Button for build and display portfolio performance
 if st.button('Backtesting your portfolio'):
     #st.session_state.more_stuff = True
@@ -520,8 +520,9 @@ if st.button('Backtesting your portfolio'):
     #new_pf['Weights'] = pf['Weights'][-1]
     st.subheader(pf['Portfolio'][-2])
     if strategy == 'Random stock pick and do optimization' or strategy == 'Remove n worst stock and do optimization':
-        '''With this weighting:'''
-        st.subheader(', '.join(map(str,pf['Weights'][-2])))
+        '''With this weighting(%):'''
+        weight_percent = [i * 100 for i in pf['Weights'][-2]]
+        st.subheader(', '.join(map(str,weight_percent)))
         
     #pf['Return']
     if report == 'Yes':
