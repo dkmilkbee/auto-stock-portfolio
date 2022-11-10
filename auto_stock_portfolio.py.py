@@ -1,7 +1,6 @@
-# Python program for Group project - Financial Data Analytics with Python
-# From: Dicky
+# Python program for project - Financial Data Analytics with Python
 # Last build date: 2022-8-15
-# Objective: Build the streamlit webapp based on Project_final.ipynb
+# Objective: Build the streamlit webapp based on auto_stock_portfolio.ipynb
 
 # Import required libraries
 # Prepare web scraping data from wikipedia
