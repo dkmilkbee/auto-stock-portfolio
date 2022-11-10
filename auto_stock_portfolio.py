@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 # Streamlit library for Web UI
 import streamlit as st
 # Quantstats library for html report
-import quantstats as qs
+#import quantstats as qs
 
 # Get symbols from Dow Jones wiki page
 def get_DJI():
@@ -452,7 +452,7 @@ elif strategy == 'Random stock pick and do optimization':
     elif opt_method == 'Custom Return':
         your_return = st.number_input('Custom return:', min_value=0.00, max_value=1.00, value=0.8, step=0.01)
 
-report = st.radio("View report using Quantstats? (Require internet connection, not work using cloud service)", ('Yes', 'No'), index=1)
+#report = st.radio("View report using Quantstats? (Require internet connection, not work using cloud service)", ('Yes', 'No'), index=1)
 # Button for build and display portfolio performance
 if st.button('Backtesting your portfolio'):
     #st.session_state.more_stuff = True
@@ -522,23 +522,18 @@ if st.button('Backtesting your portfolio'):
     if strategy == 'Random stock pick and do optimization' or strategy == 'Remove n worst stock and do optimization':
         '''With this weighting(%):'''
         weight_percent = [i * 100 for i in pf['Weights'][-2]]
-        st.subheader(', '.join(map(str,weight_percent)))
+        st.subheader('%, '.join(map(str,weight_percent))+'%')
         
     #pf['Return']
-    if report == 'Yes':
-        st.text('-----------------------------------------------------------')
-        st.subheader('Portfolio analytics using Quantstats')
-        pf.index = pf.index + pd.DateOffset(months=1)
-        generate_quantstats(pf['Return'][:-2])
-        report_file = open("portfolio_streamlit.html", 'r', encoding='utf-8')
-        html_code = report_file.read()
-        #st.write(html_code)
-        st.components.v1.html(html_code, width=1050, height=4500, scrolling=False)
-        #generate_quantstat(pf['Return'])
-        #st.components.v1.html(qs.reports.full(pf['Return']))
-        #st.write(qs.reports.full(pf['Return']))
-        #st.components.v1.iframe('http://localhost:8501/portfolio_vs_market.html')
-    
+    #if report == 'Yes':
+    #    st.text('-----------------------------------------------------------')
+    #    st.subheader('Portfolio analytics using Quantstats')
+    #    pf.index = pf.index + pd.DateOffset(months=1)
+    #    generate_quantstats(pf['Return'][:-2])
+    #    report_file = open("portfolio_streamlit.html", 'r', encoding='utf-8')
+    #    html_code = report_file.read()
+    #    st.components.v1.html(html_code, width=1050, height=4500, scrolling=False)
+
     
 # End Main Program    
 #############################################
