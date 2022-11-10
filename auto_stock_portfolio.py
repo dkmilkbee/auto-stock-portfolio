@@ -402,7 +402,7 @@ def generate_quantstats(pf):
 # Main program (For Streamlit)
 st.set_page_config(page_title='Portfolio selector', page_icon=None, layout="centered", initial_sidebar_state="auto", menu_items=None)
 #st.markdown(f"""<style>.appview-container .main .block-container{{ max-width: 60%; }}</style>""",unsafe_allow_html=True,)
-st.header('Portfolio selection WebApp - Group project')
+st.header('Portfolio selection WebApp')
 st.subheader('This web app will generate portfolios based on 4 strategies')
 
 # These are paramters to cons truct a new portfolio with optimization
