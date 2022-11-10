@@ -1,0 +1,9 @@
+bs4
+requests
+pandas
+numpy
+yfinance
+pyportfolioopt
+matplotlib
+streamlit
+quantstats
