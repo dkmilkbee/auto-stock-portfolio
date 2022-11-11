@@ -1,6 +1,6 @@
 # Python program for project - Financial Data Analytics with Python
 # Last build date: 2022-8-15
-# Objective: Build the streamlit webapp based on Project_final.ipynb
+# Objective: Build the streamlit webapp based on auto_stock_portfolio.ipynb
 
 # Import required libraries
 # Prepare web scraping data from wikipedia
@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 # Streamlit library for Web UI
 import streamlit as st
 # Quantstats library for html report
-#import quantstats as qs
+import quantstats as qs
 
 # Get symbols from Dow Jones wiki page
 def get_DJI():
@@ -392,11 +392,11 @@ def get_rate(portfolio, risk_free_rate):
     out += '\nThe Sharpe Ratio is {}'
     return out.format(round(CAGR(portfolio)*100,3), round(volatility(portfolio)*100,3), round(sharpe_ratio(portfolio, risk_free_rate),3))
 
-def generate_quantstats(pf):
+def generate_quantstats(pf, market):
     if stock_index == 'DJI':
-        qs.reports.html(pf, title='Strategy vs DJI', benchmark='^DJI', output='', download_filename='portfolio_streamlit.html')
+        qs.reports.html(pf, title='Strategy vs DJI', benchmark=market, output='', download_filename='portfolio_streamlit.html')
     elif stock_index == 'S&P100':
-        qs.reports.html(pf, title='Strategy vs S&P 100', benchmark='^OEX', output='', download_filename='portfolio_streamlit.html')
+        qs.reports.html(pf, title='Strategy vs S&P 100', benchmark=market, output='', download_filename='portfolio_streamlit.html')
 
 ###########################################################
 # Main program (For Streamlit)
@@ -452,7 +452,7 @@ elif strategy == 'Random stock pick and do optimization':
     elif opt_method == 'Custom Return':
         your_return = st.number_input('Custom return:', min_value=0.00, max_value=1.00, value=0.8, step=0.01)
 
-#report = st.radio("View report using Quantstats? (Require internet connection, not work using cloud service)", ('Yes', 'No'), index=1)
+report = st.radio("View report using Quantstats? (Require internet connection)", ('Yes', 'No'), index=0)
 # Button for build and display portfolio performance
 if st.button('Backtesting your portfolio'):
     #st.session_state.more_stuff = True
@@ -521,18 +521,18 @@ if st.button('Backtesting your portfolio'):
     st.subheader(pf['Portfolio'][-2])
     if strategy == 'Random stock pick and do optimization' or strategy == 'Remove n worst stock and do optimization':
         '''With this weighting(%):'''
-        weight_percent = [i * 100 for i in pf['Weights'][-2]]
+        weight_percent = [round(i * 100,1) for i in pf['Weights'][-2]]
         st.subheader('%, '.join(map(str,weight_percent))+'%')
         
     #pf['Return']
-    #if report == 'Yes':
-    #    st.text('-----------------------------------------------------------')
-    #    st.subheader('Portfolio analytics using Quantstats')
-    #    pf.index = pf.index + pd.DateOffset(months=1)
-    #    generate_quantstats(pf['Return'][:-2])
-    #    report_file = open("portfolio_streamlit.html", 'r', encoding='utf-8')
-    #    html_code = report_file.read()
-    #    st.components.v1.html(html_code, width=1050, height=4500, scrolling=False)
+    if report == 'Yes':
+        st.text('-----------------------------------------------------------')
+        st.subheader('Portfolio analytics using Quantstats')
+        #pf.index = pf.index + pd.DateOffset(months=1)
+        generate_quantstats(pf['Return'][:-2],index_data['Return'][mkt_start:-2])
+        report_file = open("portfolio_streamlit.html", 'r', encoding='utf-8')
+        html_code = report_file.read()
+        st.components.v1.html(html_code, width=1050, height=4500, scrolling=False)
 
     
 # End Main Program    
