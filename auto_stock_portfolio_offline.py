@@ -1,6 +1,6 @@
 # Python program for project - Financial Data Analytics with Python
 # Last build date: 2022-8-15
-# Objective: Build the streamlit webapp based on Project_final.ipynb
+# Objective: Build the streamlit webapp based on auto_stock_portfolio.ipynb
 
 # Import required libraries
 # Prepare web scraping data from wikipedia
@@ -522,7 +522,7 @@ if st.button('Backtesting your portfolio'):
     if strategy == 'Random stock pick and do optimization' or strategy == 'Remove n worst stock and do optimization':
         '''With this weighting(%):'''
         weight_percent = [i * 100 for i in pf['Weights'][-2]]
-        st.subheader(', '.join(map(str,weight_percent)))
+        st.subheader('%, '.join(map(str,weight_percent))+'%')
         
     #pf['Return']
     if report == 'Yes':
