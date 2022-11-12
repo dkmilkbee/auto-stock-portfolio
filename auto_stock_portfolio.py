@@ -83,7 +83,7 @@ def get_monthly_data(tickers, start, end):
             stock_data = pd.read_csv('sp100_data_monthly.csv', index_col=['Date'])
         # Convert datetimeindex to utc
         stock_data.index = pd.to_datetime(stock_data.index, utc=True)
-        stock_data = stock_data[start:end]
+        stock_data = stock_data[start.replace(tzinfo=dt.timezone.utc):end.replace(tzinfo=dt.timezone.utc)]
     else:
         for stock in tickers:
             #print(f'Downloading stock data for {stock}', end='')
@@ -102,8 +102,8 @@ def get_monthly_data(tickers, start, end):
 def get_return(stock_data):
     # Convert the stock price to return using pct_change() function
     ''' Calculating the monthly returns of all index Stocks '''
-    stock_returns = stock_data.pct_change().dropna()
-    return stock_returns
+    stock_return = stock_data.pct_change().dropna()
+    return stock_return
 
 # Prepare historical data for use in optimization algorithm
 def get_daily_data(tickers, start):    
@@ -117,7 +117,7 @@ def get_daily_data(tickers, start):
             stock_daily_data = pd.read_csv('sp100_data_daily.csv', index_col=['Date'])
         # Convert datetimeindex to utc
         stock_daily_data.index = pd.to_datetime(stock_daily_data.index, utc=True)
-        stock_daily_data = stock_daily_data[start_hist:]
+        stock_daily_data = stock_daily_data[start_hist.replace(tzinfo=dt.timezone.utc):]
     else:
         for stock in tickers:
             #print(f'Downloading stock data for {stock}', end='')
@@ -133,32 +133,32 @@ def get_daily_data(tickers, start):
     return stock_daily_data
 
 # Prepare market historical for comparsion
-def get_market_index():
+def get_market_return():
     # Try to compare above 4 strategies to market index itself
     # Get market index data (same date range as our portfolio)
-    mkt_index = pd.DataFrame()
+    market_data = pd.DataFrame()
     if source == 'File':
         if stock_index == 'DJI':
-            mkt_index = pd.read_csv('dji_index_monthly.csv', index_col=['Date'])
+            market_data = pd.read_csv('dji_index_monthly.csv', index_col=['Date'])
         elif stock_index == 'S&P100':
-            mkt_index = pd.read_csv('sp100_index_monthly.csv', index_col=['Date'])
+            market_data = pd.read_csv('sp100_index_monthly.csv', index_col=['Date'])
         # Convert datetimeindex to utc
-        mkt_index.index = pd.to_datetime(mkt_index.index, utc=True)
-        mkt_index = mkt_index[start:end]
+        market_data.index = pd.to_datetime(market_data.index, utc=True)
+        market_data = market_data[start.replace(tzinfo=dt.timezone.utc):end.replace(tzinfo=dt.timezone.utc)]
     else:
         if stock_index == 'DJI':
             mkt_ticker = yf.Ticker('^DJI')
         elif stock_index == 'S&P100':
             mkt_ticker = yf.Ticker('^OEX')
         tickerCl = mkt_ticker.history(interval='1mo', start=start, end=end)['Close']
-        mkt_index['Close'] = tickerCl
+        market_data['Close'] = tickerCl
         # Convert datetimeindex to utc
-        mkt_index.index = pd.to_datetime(mkt_index.index, utc=True)
+        market_data.index = pd.to_datetime(market_data.index, utc=True)
     
     # Get return
-    mkt_index['Return'] = mkt_index.pct_change()
-    mkt_index.dropna(inplace = True)
-    return mkt_index
+    market_return = pd.DataFrame()
+    market_return['Return'] = market_data.pct_change().dropna()
+    return market_return
 
 # For portfolio performance calculation
 def volatility(stock_data):
@@ -184,7 +184,7 @@ def sharpe_ratio(stock_data, risk_free):
 
 # Add new function, determine weights parameters in portfolio (optimization using max sharpe ratio) 
 def pf_weights(pf):
-    pf_hist = stock_daily_data[pf].loc[:start] # Get stocks price 1 year before the portfolio build date for optimization
+    pf_hist = stock_daily_data[pf].loc[:start.replace(tzinfo=dt.timezone.utc)] # Get stocks price 1 year before the portfolio build date for optimization
     
     #Annualized Return
     mu = expected_returns.mean_historical_return(pf_hist)
@@ -408,7 +408,7 @@ def generate_quantstats(pf, market):
 st.set_page_config(page_title='Portfolio selector', page_icon=None, layout="centered", initial_sidebar_state="auto", menu_items=None)
 #st.markdown(f"""<style>.appview-container .main .block-container{{ max-width: 60%; }}</style>""",unsafe_allow_html=True,)
 st.header('Portfolio selection WebApp')
-st.subheader('This web app will generate portfolios based on 4 strategies')
+st.subheader('This web app will generate portfolios based on four strategies')
 
 # These are paramters to cons truct a new portfolio with optimization
 # 1. Min and max weight of each stock
@@ -429,12 +429,15 @@ st.subheader('This web app will generate portfolios based on 4 strategies')
 # User input components
 source = st.radio("Data source: ", ('File', 'Web (Very slow!)'))
 stock_index = st.radio("Select your stock index: ", ('DJI', 'S&P100'), index=1)
-start = st.date_input("Start Date: ", dt.date(dt.date.today().year - 3, dt.date.today().month, dt.date.today().day)) # 3 years before today
-end = st.date_input("End Date: ", dt.date.today())
+start = st.date_input("Start Date: ", dt.datetime(dt.date.today().year - 3, dt.date.today().month, dt.date.today().day)) # 3 years before today
+end = st.date_input("End Date: ", dt.datetime.today())
 risk_free_rate = st.number_input('Risk free rate:', min_value=0.00, max_value=1.00, value=0.02, step=0.01)
 capital = st.number_input('Initial capital:', min_value=0, value=10000)
 n_stocks = st.number_input('Number of stocks in your portfolio:', min_value=1, value=8, step=1)
 strategy = st.radio("Select your portfolio strategy: ", ('Remove n worst stock', 'Random stock pick', 'Remove n worst stock and do optimization', 'Random stock pick and do optimization'))
+# Convert the input date to datetime type (Streamlit compatibility)
+start = dt.datetime.combine(start, dt.datetime.min.time()) # Set time to midnight
+end = dt.datetime.combine(end, dt.datetime.min.time())
 
 # Additional options if choosing different strategy
 if strategy == 'Remove n worst stock':
@@ -465,24 +468,24 @@ if st.button('Backtesting your portfolio'):
     if stock_index == 'DJI':
         tickers = get_DJI()
         stock_data = get_monthly_data(tickers, start, end)
-        index_data = get_market_index()        
+        market_return = get_market_return()        
     elif stock_index == 'S&P100':
         tickers = get_sp100()
         stock_data = get_monthly_data(tickers, start, end)
-        index_data = get_market_index()
+        market_return = get_market_return()
   
-    stock_returns = get_return(stock_data)
+    stock_return = get_return(stock_data)
     # Run def based on selected strategy 
     if strategy == 'Random stock pick':
-        pf_return, pf = portfolio_random(stock_returns, n_stocks)
+        pf_return, pf = portfolio_random(stock_return, n_stocks)
     elif strategy == 'Random stock pick and do optimization':
         stock_daily_data = get_daily_data(tickers, start)  
-        pf_return, pf = portfolio_random_optimized(stock_returns, n_stocks)
+        pf_return, pf = portfolio_random_optimized(stock_return, n_stocks)
     elif strategy == 'Remove n worst stock':
-        pf_return, pf = portfolio(stock_returns, n_stocks, n_remove)
+        pf_return, pf = portfolio(stock_return, n_stocks, n_remove)
     elif strategy == 'Remove n worst stock and do optimization':
         stock_daily_data = get_daily_data(tickers, start) 
-        pf_return, pf = portfolio_optimized(stock_returns, n_stocks, n_remove)
+        pf_return, pf = portfolio_optimized(stock_return, n_stocks, n_remove)
     
     # Display the portfolio details
     ''' Portflio Details'''
@@ -495,16 +498,16 @@ if st.button('Backtesting your portfolio'):
     st.text(get_rate(pf_return, risk_free_rate))
     
     '''Market data'''
-    st.text(get_rate(index_data, risk_free_rate))
+    st.text(get_rate(market_return, risk_free_rate))
     
     # Plot the index and our portfolio performance, check if better than market index or not
     ''' Visualization '''
 
     fig, ax = plt.subplots(figsize = (20, 10))
     plt.plot((1 + pf_return['Return']).cumprod(), color = 'g')
-    plt.plot((1 + index_data['Return'][1:].reset_index(drop = True)).cumprod(), color = 'r')
+    plt.plot((1 + market_return['Return'][1:].reset_index(drop = True)).cumprod(), color = 'r')
     ax.legend(['Strategy', 'Market return'], fontsize = 15)
-    plt.title('Your strategy compare with market index', fontsize = 20)
+    plt.title('Your strategy compare with market', fontsize = 20)
     plt.ylabel('Cumulative Return', fontsize = 20)
     plt.xlabel('Month', fontsize = 20)
     plt.xticks(fontsize = 15)
@@ -524,12 +527,12 @@ if st.button('Backtesting your portfolio'):
     if report == 'Yes':
         # Prepare for generate report
         # Fix quantstats datetime compare issues
-        index_data.index = index_data.index.tz_localize(None)
+        market_return.index = market_return.index.tz_localize(None)
         pf.index = pf.index.tz_localize(None)
         st.text('-----------------------------------------------------------')
         st.subheader('Portfolio analytics using Quantstats')
         #pf.index = pf.index + pd.DateOffset(months=1)
-        generate_quantstats(pf['Return'], index_data['Return'][1:])
+        generate_quantstats(pf['Return'], market_return['Return'][1:])
         report_file = open("portfolio_streamlit.html", 'r', encoding='utf-8')
         html_code = report_file.read()
         st.components.v1.html(html_code, width=1050, height=4500, scrolling=False)
